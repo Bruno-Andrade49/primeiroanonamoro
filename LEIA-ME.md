@@ -22,12 +22,3 @@ Depois é só abrir http://localhost:5173
   2. Coloque uma cópia menor, de uns 640px, em `assets/fotos/thumbs/nome.jpg`.
   3. Cadastre a foto em `fotos` no `data.js`, com legenda, `alt`, largura (`w`) e altura (`h`).
 - **Música:** coloque um mp3 em `assets/` e preencha `musica: "assets/arquivo.mp3"`. Aí aparece o botão de disco no topo, e a música começa quando ela abre a carta.
-
-## Publicar
-
-É um site estático, então qualquer um destes serve:
-
-- **Netlify Drop:** arraste a pasta `namoro` para https://app.netlify.com/drop
-- **Vercel** ou **GitHub Pages**
-
-⚠️ Qualquer pessoa com o link vai conseguir ver as fotos.

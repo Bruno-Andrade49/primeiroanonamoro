@@ -89,7 +89,7 @@
     el.innerHTML = unit.repeat(4) + unit.repeat(4); // duas metades iguais = loop perfeito
   };
   buildMarquee($("#marqueeA"), [D.ele, D.ela, "1 ano de nós", "02.10.2025"]);
-  buildMarquee($("#marqueeB"), ["azul & amarelo", "nossas cores", "365 dias", "pra sempre"]);
+  buildMarquee($("#marqueeB"), ["365 dias", "pra sempre"]);
 
   // ---------- linha do tempo ----------
   const PILE = {
@@ -108,7 +108,16 @@
       ? texto.split(/\n\s*\n/).map((p) => `<p>${esc(p)}</p>`).join("")
       : `<p class="is-empty">texto deste mês em breve…</p>`;
 
-    const pols = shown.length
+    // vídeo do mês: sem som (muted), em loop, só carrega/toca quando aparece na tela
+    const pols = m.video
+      ? `<div class="polaroid polaroid--video" style="--r:-3deg">
+          <span class="polaroid__card">
+            <span class="polaroid__img"><video src="${esc(m.video)}" muted loop playsinline preload="none"
+              disablepictureinpicture aria-label="Vídeo de ${esc(m.mes)}"></video></span>
+            <span class="polaroid__cap">${esc(m.videoLegenda || "")}</span>
+          </span>
+        </div>`
+      : shown.length
       ? shown.map((f, j) => {
           const l = PILE[shown.length][j];
           return `<button class="polaroid" type="button" data-month="${i}" data-index="${j}"
@@ -138,6 +147,18 @@
       <div class="chapter__photos">${pols}${more}</div>
     </li>`;
   }).join("");
+
+  // vídeos dos meses: tocam quando entram na tela e pausam quando saem
+  const monthVideos = $$("#chapters video");
+  if (monthVideos.length) {
+    monthVideos.forEach((v) => { v.muted = true; v.defaultMuted = true; });
+    const vio = new IntersectionObserver((entries) => entries.forEach(({ target: v, isIntersecting }) => {
+      if (isIntersecting && !reduceMotion) v.play().catch(() => {});
+      else if (isIntersecting) v.preload = "metadata"; // movimento reduzido: só mostra o primeiro quadro
+      else v.pause();
+    }), { rootMargin: "200px 0px" });
+    monthVideos.forEach((v) => vio.observe(v));
+  }
 
   // ---------- galeria ----------
   const masonry = $("#masonry");
@@ -174,7 +195,7 @@
 
   // ---------- carta ----------
   if (D.carta && D.carta.length) {
-    $("#cartaTo").textContent = `Para a minha ${D.ela},`;
+    $("#cartaTo").textContent = `Para ${D.ela},`;
     $("#cartaFrom").textContent = D.ele;
     $("#cartaBody").innerHTML = D.carta
       .map((p) => `<p>${p.split(/(\s+)/).map((w) => (/^\s*$/.test(w) ? w : `<span class="word">${esc(w)}</span>`)).join("")}</p>`)
