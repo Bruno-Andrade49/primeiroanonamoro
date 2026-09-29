@@ -3,7 +3,17 @@ window.NAMORO = {
   ela: "Maria Luisa",
   inicio: "2025-10-02T00:00:00-03:00",
 
-  musica: "assets/musica/3x4.mp3",
+  // Trilha sonora: coloque os mp3 em assets/musica/ com estes nomes.
+  // Uma música sem arquivo aparece como "em breve" no seletor e é pulada.
+  musicas: [
+    { titulo: "O Retorno de Saturno", artista: "Detonautas",               arquivo: "assets/musica/Detonautas - O Retorno de Saturno.mp3" },
+    { titulo: "N",                    artista: "Nando Reis e Anavitória",  arquivo: "assets/musica/Nando Reis e Anavitória - N.mp3" },
+    { titulo: "Fifa",                 artista: "Lagum",                    arquivo: "assets/musica/Lagum - Fifa.mp3" },
+    { titulo: "Um Sonho",             artista: "Nação Zumbi",              arquivo: "assets/musica/Nação Zumbi - Um Sonho.mp3" },
+    { titulo: "3 x 4",                artista: "Engenheiros do Hawaii",    arquivo: "assets/musica/3x4.mp3" },
+  ],
+  // qual música começa quando ela abre a carta (0 = a primeira da lista)
+  musicaInicial: 4,
 
   subtitulo: "Um ano de nós, e ainda é só o primeiro capítulo.",
 
@@ -60,7 +70,7 @@ window.NAMORO = {
   carta: [
     "Há um ano atrás eu não fazia noção do rumo que a minha vida tomaria, do brilho que você traria a ela e do quão importante uma pessoa pode se tornar na nossa vida.",
     "Nesse ultimo ano eu fui o homem mais feliz do mundo, por de fato te conhecer de verdade e por ver a vida sendo seu namorado, foi a minha melhor decisão.",
-    "Obrigado por cada risada, cada conversa, cada abraço apertado e por transformar os dias mais comuns nos meus preferidos. Hoje eu sou como a musica do Nando Reis, esperando que o tempo voe, que a semana acabe, pra poder estar de volta ao seu lado, pois você hoje é o meu lar. ",
+    "Obrigado por cada risada, cada conversa, cada abraço apertado e por transformar os dias mais comuns nos meus preferidos. Hoje eu sou como a musica do Nando Reis, esperando que o tempo voe, que a semana acabe, pra poder estar sempre de volta ao seu lado, pois você hoje é o meu lar. ",
     "Se eu pudesse voltar no tempo, escolheria você de novo em cada mês dessa linha do tempo. E vou continuar escolhendo em todos os que ainda vêm.",
     "Feliz 1 ano, meu amor. Eu te amo.",
   ],

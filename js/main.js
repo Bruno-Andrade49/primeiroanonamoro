@@ -307,7 +307,7 @@
   // um toque em qualquer lugar solta coraçõezinhos.
   // "click" (e não pointerdown): no celular, o pointerdown dispara a cada rolagem com o dedo
   addEventListener("click", (e) => {
-    if (e.target.closest("button, a, .lightbox, .intro")) return;
+    if (e.target.closest("button, a, input, .lightbox, .intro, .player")) return;
     burst(e.clientX, e.clientY, 8, 0.6);
   });
 
@@ -685,20 +685,169 @@
   /* ===================================================================
      MÚSICA (opcional)
      =================================================================== */
-  if (D.musica) {
+  const tracks = (D.musicas || []).map((t) => ({ ...t, missing: false }));
+  if (tracks.length) {
     const audio = $("#audio");
+    const wrap = $("#playerWrap");
     const btn = $("#musicBtn");
-    audio.src = D.musica;
-    btn.hidden = false;
-    const setOn = (on) => {
-      btn.setAttribute("aria-pressed", String(on));
-      btn.setAttribute("aria-label", on ? "Pausar nossa música" : "Tocar nossa música");
+    const panel = $("#player");
+    const list = $("#plList");
+    const playBtn = $("#plPlay");
+    const seek = $("#plSeek");
+    const fmt = (s) => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "0:00");
+    let cur = Math.min(Math.max(D.musicaInicial ?? 0, 0), tracks.length - 1);
+    let wantPlay = false; // o usuário pediu para tocar (usado para pular músicas sem arquivo)
+    let seeking = false;
+
+    wrap.hidden = false;
+    list.innerHTML = tracks.map((t, i) => `
+      <li><button class="pl-track" type="button" data-i="${i}">
+        <span class="pl-track__n" aria-hidden="true"><b>${String(i + 1).padStart(2, "0")}</b><span class="pl-eq"><i></i><i></i><i></i></span></span>
+        <span class="pl-track__txt"><span class="pl-track__t">${esc(t.titulo)}</span><span class="pl-track__a">${esc(t.artista)}</span></span>
+        <span class="pl-track__soon">em breve</span>
+      </button></li>`).join("");
+    const rows = $$(".pl-track", list);
+
+    const markMissing = (i) => {
+      tracks[i].missing = true;
+      rows[i].classList.add("is-missing");
+      rows[i].setAttribute("aria-disabled", "true");
     };
-    playMusic = () => audio.play().then(() => setOn(true)).catch(() => {});
-    btn.addEventListener("click", () => {
-      if (audio.paused) playMusic();
-      else { audio.pause(); setOn(false); }
+    // descobre logo quais arquivos ainda não estão na pasta (não funciona abrindo o html direto do disco)
+    tracks.forEach((t, i) =>
+      fetch(t.arquivo, { method: "HEAD" }).then((r) => { if (!r.ok) markMissing(i); }).catch(() => {})
+    );
+
+    const syncPlaying = () => {
+      const on = !audio.paused;
+      btn.setAttribute("aria-pressed", String(on));
+      wrap.classList.toggle("is-playing", on);
+      panel.classList.toggle("is-playing", on);
+      playBtn.setAttribute("aria-label", on ? "Pausar" : "Tocar");
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = on ? "playing" : "paused";
+    };
+
+    function load(i) {
+      cur = (i + tracks.length) % tracks.length;
+      const t = tracks[cur];
+      audio.src = t.arquivo;
+      $("#plTitle").textContent = t.titulo;
+      $("#plArtist").textContent = t.artista;
+      seek.value = 0;
+      seek.style.setProperty("--p", "0%");
+      $("#plCur").textContent = "0:00";
+      $("#plDur").textContent = "0:00";
+      rows.forEach((r, k) => {
+        r.classList.toggle("is-current", k === cur);
+        if (k === cur) r.setAttribute("aria-current", "true");
+        else r.removeAttribute("aria-current");
+      });
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: t.titulo, artist: t.artista, album: `${D.ele} & ${D.ela}` });
+      }
+    }
+
+    const play = () => { wantPlay = true; return audio.play().catch(() => {}); };
+    const pause = () => { wantPlay = false; audio.pause(); };
+    // anda pela lista pulando as músicas que ainda não têm arquivo
+    function step(dir) {
+      for (let k = 1; k <= tracks.length; k++) {
+        const i = (cur + dir * k + tracks.length) % tracks.length;
+        if (!tracks[i].missing) { load(i); if (wantPlay) play(); return; }
+      }
+      pause();
+    }
+
+    audio.loop = false;
+    audio.preload = "metadata";
+    audio.addEventListener("play", syncPlaying);
+    audio.addEventListener("pause", syncPlaying);
+    audio.addEventListener("ended", () => step(1));
+    audio.addEventListener("error", () => {
+      if (!audio.getAttribute("src")) return;
+      markMissing(cur);
+      if (wantPlay && tracks.some((t) => !t.missing)) step(1);
+      else { wantPlay = false; syncPlaying(); }
     });
+    audio.addEventListener("loadedmetadata", () => { $("#plDur").textContent = fmt(audio.duration); });
+    audio.addEventListener("timeupdate", () => {
+      if (seeking || !audio.duration) return;
+      const p = audio.currentTime / audio.duration;
+      seek.value = Math.round(p * 1000);
+      seek.style.setProperty("--p", `${p * 100}%`);
+      $("#plCur").textContent = fmt(audio.currentTime);
+    });
+
+    seek.addEventListener("input", () => {
+      seeking = true;
+      seek.style.setProperty("--p", `${seek.value / 10}%`);
+      if (audio.duration) $("#plCur").textContent = fmt((seek.value / 1000) * audio.duration);
+    });
+    seek.addEventListener("change", () => {
+      if (audio.duration) audio.currentTime = (seek.value / 1000) * audio.duration;
+      seeking = false;
+    });
+
+    playBtn.addEventListener("click", () => (audio.paused ? play() : pause()));
+    $("#plPrev").addEventListener("click", () => {
+      if (audio.currentTime > 3) audio.currentTime = 0; // igual aos players: volta ao começo primeiro
+      else step(-1);
+    });
+    $("#plNext").addEventListener("click", () => step(1));
+    list.addEventListener("click", (e) => {
+      const r = e.target.closest(".pl-track");
+      if (!r) return;
+      const i = +r.dataset.i;
+      if (tracks[i].missing) return;
+      if (i === cur) { audio.paused ? play() : pause(); return; }
+      load(i);
+      play();
+    });
+
+    if ("mediaSession" in navigator) {
+      const ms = navigator.mediaSession;
+      ms.setActionHandler("play", play);
+      ms.setActionHandler("pause", pause);
+      ms.setActionHandler("previoustrack", () => step(-1));
+      ms.setActionHandler("nexttrack", () => step(1));
+    }
+
+    // abrir / fechar o painel
+    const setOpen = (open) => {
+      if (open === !panel.hidden) return;
+      btn.setAttribute("aria-expanded", String(open));
+      if (open) {
+        panel.hidden = false;
+        if (!reduceMotion) {
+          panel.animate(
+            [{ opacity: 0, transform: "translateY(-10px) scale(.96)" }, { opacity: 1, transform: "none" }],
+            { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" }
+          );
+        }
+      } else if (reduceMotion) {
+        panel.hidden = true;
+      } else {
+        const a = panel.animate(
+          [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-8px) scale(.97)" }],
+          { duration: 180, easing: "ease-in" }
+        );
+        a.onfinish = () => { panel.hidden = true; };
+      }
+    };
+    btn.addEventListener("click", () => setOpen(panel.hidden));
+    document.addEventListener("click", (e) => {
+      if (!wrap.contains(e.target) && !panel.contains(e.target)) setOpen(false);
+    });
+    addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !panel.hidden) { setOpen(false); btn.focus(); }
+    });
+
+    load(cur);
+    playMusic = () => {
+      wantPlay = true;
+      if (tracks[cur].missing) step(1);
+      else play();
+    };
   }
 
   /* ===================================================================
