@@ -59,7 +59,7 @@ window.NAMORO = {
     { mes: "Janeiro",   ano: 2026, titulo: "De Janeiro a Janeiro",   texto: "Nosso primeiro ano novo e viagem namorando", fotos: ["van-gogh", "arvore-natal", "janeiro-1", "janeiro-2"] },
     { mes: "Fevereiro", ano: 2026, titulo: "Bloco de dois",        texto: "Carnaval juntos no sitio da sua familia e uma fotinha no sofá da sua casa", fotos: ["carnaval", "sofa"] },
     { mes: "Março",     ano: 2026, titulo: "Rindo à toa",          texto: "Das vezes em que você veio aqui em casa e nosso treinão", fotos: ["sorriso", "careta", "marco-1", "academia"] },
-    { mes: "Abril",     ano: 2026, titulo: "Love drive",           texto: "Esse mês não tiramos fotos juntos, mas vou colocar um video do dia 2 de março", fotos: [], video: "assets/fotos/video/abril-1.mp4", videoLegenda: "arriscando a vida com meu amor kkkkkkkkk dirigiu bem direitinho ☝️" },
+    { mes: "Abril",     ano: 2026, titulo: "Love drive",           texto: "Esse mês não tiramos fotos juntos, mas vou colocar um video do dia 2 de maio", fotos: [], video: "assets/fotos/video/abril-1.mp4", videoLegenda: "arriscando a vida com meu amor kkkkkkkkk dirigiu bem direitinho ☝️" },
     { mes: "Maio",      ano: 2026, titulo: "No meio da multidão",  texto: "Nosso segundo show juntos de Engenheiros do Hawai, quase 1 ano depois de termos ido o primeiro, ainda sem namorar", fotos: ["show-beijo"] },
     { mes: "Junho",     ano: 2026, titulo: "Arraiá do amor",       texto: "Nosso primeiro e único dia de PP desse ano", fotos: ["cenario"] },
     { mes: "Julho",     ano: 2026, titulo: "Dale Brasil",       texto: "Torcendo pelo Brasil no primeiro jogo da seleção na copa", fotos: ["julho-1"] },
